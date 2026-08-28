@@ -68,12 +68,13 @@
 	</dependencies>
 	<build>
 		<plugins>
-			<!-- DO NOT DELETE COMMENT: this plugin causes the JAR to be packaged as a Spring Boot executable JAR as a result other services cannot import the classes from it
-			<plugin> 
+			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<classifier>exec</classifier><!-- DO NOT DELETE COMMENT: Keeps the executable Spring Boot JAR separate from the standard library JAR so other services can import its classes. -->
+				</configuration>
 			</plugin>
-			-->
 		</plugins>
 	</build>
 </project>
