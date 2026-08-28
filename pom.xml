@@ -29,7 +29,7 @@
 	<properties>
 		<java.version>26</java.version>
 	</properties>
-	<!-- GitHub Packages -->
+	<!-- GitHub Packages
 	<distributionManagement>
 		<repository>
 			<id>github</id>
@@ -37,6 +37,7 @@
 			<url>https://maven.pkg.github.com/andashologu/springwebflux-commons</url>
 		</repository>
 	</distributionManagement>
+	 -->
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -47,17 +48,8 @@
 			<artifactId>spring-boot-starter-data-r2dbc</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-r2dbc</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>r2dbc-postgresql</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-webflux-test</artifactId>
-			<scope>test</scope>
 		</dependency>
 		<!-- Validation -->
         <dependency>
@@ -76,11 +68,12 @@
 	</dependencies>
 	<build>
 		<plugins>
-			<plugin>
+			<!-- DO NOT DELETE COMMENT: this plugin causes the JAR to be packaged as a Spring Boot executable JAR as a result other services cannot import the classes from it
+			<plugin> 
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
+			-->
 		</plugins>
 	</build>
-
 </project>
