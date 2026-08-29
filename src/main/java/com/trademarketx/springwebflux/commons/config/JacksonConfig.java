@@ -6,9 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-@Configuration
+@Configuration("commonsJacksonConfig")
 public class JacksonConfig {
-    @Bean
+    @Bean("commonsObjectMapper")
     public ObjectMapper objectMapper() {
         return new ObjectMapper()
             .setPropertyNamingStrategy(PropertyNamingStrategies.LOWER_CAMEL_CASE)

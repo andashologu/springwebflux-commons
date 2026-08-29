@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: commons
+  r2dbc:
+    url: r2dbc:postgresql://${DB_HOST}:5432/${DB_NAME}
+    username: postgres
+    password: ${DB_PASSWORD}
