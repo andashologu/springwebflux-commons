@@ -11,7 +11,7 @@ import tools.jackson.databind.ValueDeserializer;
 import tools.jackson.databind.ValueSerializer;
 
 @JacksonComponent
-public class R2dbcJsonJacksonComponent {
+public class R2dbcJsonJackson {
     public static class Serializer extends ValueSerializer<Json> {
         @Override
         public void serialize(Json value, JsonGenerator generator, SerializationContext context) {
