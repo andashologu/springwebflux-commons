@@ -30,13 +30,13 @@
 		<java.version>26</java.version>
 	</properties>
 	<!-- GitHub Packages
-	<distributionManagement>
-		<repository>
-			<id>github</id>
-			<name>GitHub Packages</name>
-			<url>https://maven.pkg.github.com/andashologu/springwebflux-commons</url>
-		</repository>
-	</distributionManagement>
+		<distributionManagement>
+			<repository>
+				<id>github</id>
+				<name>GitHub Packages</name>
+				<url>https://maven.pkg.github.com/andashologu/springwebflux-commons</url>
+			</repository>
+		</distributionManagement>
 	 -->
 	<dependencies>
 		<dependency>
