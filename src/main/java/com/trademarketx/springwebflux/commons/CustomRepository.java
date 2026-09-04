@@ -22,6 +22,7 @@ import com.trademarketx.springwebflux.commons.conversion.EntityConversion;
 import com.trademarketx.springwebflux.commons.conversion.MapConversion;
 import com.trademarketx.springwebflux.commons.util.Util;
 
+import io.r2dbc.postgresql.codec.Json;
 import reactor.core.publisher.Flux;
 
 import reactor.core.publisher.Mono;
@@ -176,28 +177,29 @@ public class CustomRepository<T, ID> {
         Map<String, Object> bindings = new LinkedHashMap<>();
         List<String> setClauses = new ArrayList<>();
 
-        for (Map.Entry<String, Object> entry : fieldsToUpdate.entrySet()) {
-
-            String inputKey = entry.getKey();
-            Object value    = entry.getValue();
-
-            Field field = keyToField.get(inputKey);
-            if (field == null) {
-                return Mono.error(new IllegalArgumentException("Unknown field: " + inputKey));
+        try {
+            for (Map.Entry<String, Object> entry : fieldsToUpdate.entrySet()) {
+                String inputKey = entry.getKey();
+                Object value = entry.getValue();
+                Field field = keyToField.get(inputKey);
+                if (field == null) {
+                    return Mono.error(new IllegalArgumentException("Unknown field: " + inputKey));
+                }
+                String columnName = field.getName();
+                String paramName = field.getName();
+                if (field.getType() == Json.class) {
+                    setClauses.add(q(columnName) + " = :" + paramName);
+                    bindings.put(paramName, Json.of(objectMapper.writeValueAsString(value)));
+                } else if (value instanceof Map<?, ?> jsonMap) {
+                    String clause = buildNestedJsonbSet(columnName, jsonMap, bindings, paramName);
+                    setClauses.add(q(columnName) + " = " + clause);
+                } else {
+                    setClauses.add(q(columnName) + " = :" + paramName);
+                    bindings.put(paramName, value);
+                }
             }
-
-            String columnName = field.getName();
-            String paramName  = field.getName();
-
-            if (value instanceof Map<?, ?> jsonMap) {
-                String clause =
-                    buildNestedJsonbSet(columnName, jsonMap, bindings, paramName);
-                setClauses.add(q(columnName) + " = " + clause);
-            } else {
-                //setClauses.add(columnName + " = :" + paramName);
-                setClauses.add(q(columnName) + " = :" + paramName);
-                bindings.put(paramName, value);
-            }
+        } catch (Exception e) {
+            return Mono.error(new IllegalArgumentException("Failed to process fields for update", e));
         }
 
         String setSql = String.join(", ", setClauses);
