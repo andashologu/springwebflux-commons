@@ -1,6 +1,5 @@
 package com.trademarketx.springwebflux.commons.config;
 
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
