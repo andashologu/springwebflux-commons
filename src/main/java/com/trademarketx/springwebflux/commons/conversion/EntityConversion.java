@@ -1,5 +1,4 @@
 package com.trademarketx.springwebflux.commons.conversion;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trademarketx.springwebflux.commons.util.Util;
 import io.r2dbc.postgresql.codec.Json;
@@ -8,6 +7,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Component;
 import java.lang.reflect.Field;
+import java.util.Map;
 @Component
 public class EntityConversion {
     private final ObjectMapper objectMapper;
@@ -19,30 +19,26 @@ public class EntityConversion {
             if (Util.isTransient(field)) continue;
             field.setAccessible(true);
             String column = field.getName();
+
             try {
                 Object value;
-                if (field.getType() == Json.class) {
-                    value = row.get(column, Json.class);
-                } else if (Util.isJsonType(field.getType())) {
-                    Object raw = row.get(column);
-                    if (raw instanceof Json json) {
-                        String jsonString = json.asString();
-                        value = objectMapper.readValue(jsonString, field.getType());
-                    } else if (raw != null) {
-                        value = objectMapper.convertValue(raw, field.getType());
-                    } else {
-                        value = null;
-                    }
+
+                if (field.getType() == Map.class) {
+                    Json json = row.get(column, Json.class);
+                    value = json != null
+                        ? objectMapper.readValue(json.asString(), Map.class)
+                        : null;
+
                 } else if (field.getType().isEnum()) {
                     Object raw = row.get(column);
                     value = raw != null ? EnumConversion.toEnum(field, raw.toString()) : null;
+
                 } else {
                     value = row.get(column, field.getType());
                 }
-                if (field.getType().isEnum() && value != null) {
-                    value = EnumConversion.toEnum(field, value.toString());
-                }
+
                 field.set(entity, value);
+
             } catch (Exception e) {
                 throw new RuntimeException(
                     "Failed to map column '" + column + "' to field '" + field.getName() + "'", e
@@ -64,14 +60,19 @@ public class EntityConversion {
                     } else {
                         spec = spec.bindNull(column, Object.class);
                     }
-                } else if (field.getType() == Json.class) {
-                    spec = spec.bind(column, value);
-                } else if (Util.isJsonType(field.getType())) {
-                    spec = spec.bind(column, Json.of(objectMapper.writeValueAsString(value)));
-                } else if (Util.isJsonType(field.getType())) {
-                    spec = spec.bind(column,
-                        Json.of(objectMapper.writeValueAsString(value)));
-                } else {
+                } else if (field.getType().isEnum()) {
+                    spec = spec.bind(column, ((Enum<?>) value).name()); 
+                }
+                /*
+                    else if (Util.isJsonType(field.getType())) {
+                        spec = spec.bind(column,
+                            Json.of(objectMapper.writeValueAsString(value)));
+                    }
+                */
+                else if (value instanceof Map<?, ?> jsonMap) {
+                    spec = spec.bind(column, Json.of(objectMapper.writeValueAsString(jsonMap)));
+                }
+                else {
                     spec = spec.bind(column, value);
                 }
             }

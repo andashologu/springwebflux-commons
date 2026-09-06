@@ -167,11 +167,11 @@ public class CustomRepository<T, ID> {
 
         String tableName = Util.getTableName(entityClass);
 
-        Map<String, Field> keyToField = new HashMap<>();
+        Map<String, Field> keyFieldPairs = new HashMap<>(); /* 'key of fieldsToUpdate' mapped to corresponding entity field */
         for (Field field : entityClass.getDeclaredFields()) {
             if (Util.isTransient(field)) continue;
             field.setAccessible(true);
-            keyToField.put(field.getName(), field);
+            keyFieldPairs.put(field.getName(), field);
         }
 
         Map<String, Object> bindings = new LinkedHashMap<>();
@@ -181,13 +181,13 @@ public class CustomRepository<T, ID> {
             for (Map.Entry<String, Object> entry : fieldsToUpdate.entrySet()) {
                 String inputKey = entry.getKey();
                 Object value = entry.getValue();
-                Field field = keyToField.get(inputKey);
+                Field field = keyFieldPairs.get(inputKey);
                 if (field == null) {
                     return Mono.error(new IllegalArgumentException("Unknown field: " + inputKey));
                 }
                 String columnName = field.getName();
                 String paramName = field.getName();
-                if (field.getType() == Json.class) {
+                if (field.getType() == Map.class) { // If this is true, second condition will not be executed. Useful for Map Data Type.
                     setClauses.add(q(columnName) + " = :" + paramName);
                     bindings.put(paramName, Json.of(objectMapper.writeValueAsString(value)));
                 } else if (value instanceof Map<?, ?> jsonMap) {
@@ -204,7 +204,7 @@ public class CustomRepository<T, ID> {
 
         String setSql = String.join(", ", setClauses);
 
-        String returningClause = buildJsonbReturnClause(tableName, fieldsToUpdate, keyToField, null);
+        String returningClause = buildJsonbReturnClause(tableName, fieldsToUpdate, keyFieldPairs, null);
 
         //String whereClause = " WHERE id = :id";
         String whereClause = " WHERE " + q("id") + " = :id";
