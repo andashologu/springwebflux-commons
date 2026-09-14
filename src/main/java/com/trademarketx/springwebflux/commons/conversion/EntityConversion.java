@@ -19,26 +19,25 @@ public class EntityConversion {
             if (Util.isTransient(field)) continue;
             field.setAccessible(true);
             String column = field.getName();
-
             try {
                 Object value;
-
                 if (field.getType() == Map.class) {
                     Json json = row.get(column, Json.class);
                     value = json != null
                         ? objectMapper.readValue(json.asString(), Map.class)
                         : null;
-
-                } else if (field.getType().isEnum()) {
+                }
+                else if (field.getType().isEnum()) {
                     Object raw = row.get(column);
                     value = raw != null ? EnumConversion.toEnum(field, raw.toString()) : null;
-
-                } else {
+                }
+                else if (field.getType().isArray()) {
                     value = row.get(column, field.getType());
                 }
-
+                else {
+                    value = row.get(column, field.getType());
+                }
                 field.set(entity, value);
-
             } catch (Exception e) {
                 throw new RuntimeException(
                     "Failed to map column '" + column + "' to field '" + field.getName() + "'", e
@@ -54,26 +53,33 @@ public class EntityConversion {
                 field.setAccessible(true);
                 Object value = field.get(entity);
                 String column = field.getName();
-                if (value == null) {
-                    if (Util.isJsonType(field.getType())) {
+                if (field.getType() == Map.class) {
+                    if (value == null) {
                         spec = spec.bindNull(column, Json.class);
                     } else {
-                        spec = spec.bindNull(column, Object.class);
+                        spec = spec.bind(column, Json.of(objectMapper.writeValueAsString(value)));
                     }
-                } else if (field.getType().isEnum()) {
-                    spec = spec.bind(column, ((Enum<?>) value).name()); 
                 }
-                /*
-                    else if (Util.isJsonType(field.getType())) {
-                        spec = spec.bind(column,
-                            Json.of(objectMapper.writeValueAsString(value)));
+                else if (field.getType().isEnum()) {
+                    if (value == null) {
+                        spec = spec.bindNull(column, String.class);
+                    } else {
+                        spec = spec.bind(column, ((Enum<?>) value).name());
                     }
-                */
-                else if (value instanceof Map<?, ?> jsonMap) {
-                    spec = spec.bind(column, Json.of(objectMapper.writeValueAsString(jsonMap)));
+                }
+                else if (field.getType().isArray()) {
+                    if (value == null) {
+                        spec = spec.bindNull(column, field.getType());
+                    } else {
+                        spec = spec.bind(column, value);
+                    }
                 }
                 else {
-                    spec = spec.bind(column, value);
+                    if (value == null) {
+                        spec = spec.bindNull(column, field.getType());
+                    } else {
+                        spec = spec.bind(column, value);
+                    }
                 }
             }
             return spec;
