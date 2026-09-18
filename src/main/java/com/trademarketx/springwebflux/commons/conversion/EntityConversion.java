@@ -27,6 +27,12 @@ public class EntityConversion {
                         ? objectMapper.readValue(json.asString(), Map.class)
                         : null;
                 }
+                else if (Util.isJsonType(field.getType())) {
+                    Json json = row.get(column, Json.class);
+                    value = json != null
+                        ? objectMapper.readValue(json.asString(), field.getType())
+                        : null;
+                }
                 else if (field.getType().isEnum()) {
                     Object raw = row.get(column);
                     value = raw != null ? EnumConversion.toEnum(field, raw.toString()) : null;
@@ -53,7 +59,7 @@ public class EntityConversion {
                 field.setAccessible(true);
                 Object value = field.get(entity);
                 String column = field.getName();
-                if (field.getType() == Map.class) {
+                if (field.getType() == Map.class || Util.isJsonType(field.getType())) {
                     if (value == null) {
                         spec = spec.bindNull(column, Json.class);
                     } else {

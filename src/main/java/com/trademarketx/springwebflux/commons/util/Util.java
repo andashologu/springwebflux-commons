@@ -21,7 +21,8 @@ public final class Util {
 
     private Util() {}
 
-    public static String getTableName(Class<?> entityClass) {
+    @Deprecated 
+    public static String resolveTableName(Class<?> entityClass) {
 
         Table table = entityClass.getAnnotation(Table.class);
         if (table != null && !table.value().isBlank()) {
@@ -50,6 +51,24 @@ public final class Util {
 
         // Lowercase first character only
         return pluralName.substring(0, 1).toLowerCase() + pluralName.substring(1);
+    }
+
+    public static String getTableName(Class<?> entityClass) {
+        Table table = entityClass.getAnnotation(Table.class);
+        if (table == null) {
+            throw new IllegalArgumentException(
+                "Entity " + entityClass.getName() + " must define @Table with a table name"
+            );
+        }
+        if (!table.value().isBlank()) {
+            return table.value();
+        }
+        if (!table.name().isBlank()) {
+            return table.name();
+        }
+        throw new IllegalArgumentException(
+            "Entity " + entityClass.getName() + " must define @Table with a table name"
+        );
     }
 
     public static boolean isTransient(Field field) {
