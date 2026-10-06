@@ -27,7 +27,10 @@ public class EntityConversion {
                         ? objectMapper.readValue(json.asString(), Map.class)
                         : null;
                 }
-                else if (Util.isJsonType(field.getType())) {
+                else if (field.getType().isArray()) {
+                    value = row.get(column, field.getType());
+                }
+                else if (Util.isJsonType(field.getType())) { // Handle our Custom classes. eg Preferences, Settings, etc.
                     Json json = row.get(column, Json.class);
                     value = json != null
                         ? objectMapper.readValue(json.asString(), field.getType())
@@ -36,9 +39,6 @@ public class EntityConversion {
                 else if (field.getType().isEnum()) {
                     Object raw = row.get(column);
                     value = raw != null ? EnumConversion.toEnum(field, raw.toString()) : null;
-                }
-                else if (field.getType().isArray()) {
-                    value = row.get(column, field.getType());
                 }
                 else {
                     value = row.get(column, field.getType());
@@ -55,11 +55,21 @@ public class EntityConversion {
     public <T> DatabaseClient.GenericExecuteSpec entityToRow(DatabaseClient.GenericExecuteSpec spec, T entity) {
         try {
             for (Field field : entity.getClass().getDeclaredFields()) {
+                IO.print("\nEntityConversion.java >  entityToRow() > field: " +field);
                 if (Util.isTransient(field) || field.isAnnotationPresent(Id.class)) continue;
                 field.setAccessible(true);
                 Object value = field.get(entity);
                 String column = field.getName();
-                if (field.getType() == Map.class || Util.isJsonType(field.getType())) {
+                if (field.getType().isArray()) {
+                    IO.print("\nEntityConversion.java >  entityToRow() > Array field");
+                    if (value == null) {
+                        spec = spec.bindNull(column, field.getType());
+                    } else {
+                        spec = spec.bind(column, value);
+                    }
+                }
+                else if (field.getType() == Map.class || Util.isJsonType(field.getType())) {
+                    IO.print("\nEntityConversion.java >  entityToRow() > Map or JSON field");
                     if (value == null) {
                         spec = spec.bindNull(column, Json.class);
                     } else {
@@ -67,20 +77,16 @@ public class EntityConversion {
                     }
                 }
                 else if (field.getType().isEnum()) {
+                    IO.print("\nEntityConversion.java >  entityToRow() > Enum field");
                     if (value == null) {
                         spec = spec.bindNull(column, String.class);
                     } else {
                         spec = spec.bind(column, ((Enum<?>) value).name());
                     }
                 }
-                else if (field.getType().isArray()) {
-                    if (value == null) {
-                        spec = spec.bindNull(column, field.getType());
-                    } else {
-                        spec = spec.bind(column, value);
-                    }
-                }
+                
                 else {
+                    IO.print("\nEntityConversion.java >  entityToRow() > Other field");
                     if (value == null) {
                         spec = spec.bindNull(column, field.getType());
                     } else {
