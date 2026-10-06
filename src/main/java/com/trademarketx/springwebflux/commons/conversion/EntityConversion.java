@@ -55,13 +55,11 @@ public class EntityConversion {
     public <T> DatabaseClient.GenericExecuteSpec entityToRow(DatabaseClient.GenericExecuteSpec spec, T entity) {
         try {
             for (Field field : entity.getClass().getDeclaredFields()) {
-                IO.print("\nEntityConversion.java >  entityToRow() > field: " +field);
                 if (Util.isTransient(field) || field.isAnnotationPresent(Id.class)) continue;
                 field.setAccessible(true);
                 Object value = field.get(entity);
                 String column = field.getName();
                 if (field.getType().isArray()) {
-                    IO.print("\nEntityConversion.java >  entityToRow() > Array field");
                     if (value == null) {
                         spec = spec.bindNull(column, field.getType());
                     } else {
@@ -69,7 +67,6 @@ public class EntityConversion {
                     }
                 }
                 else if (field.getType() == Map.class || Util.isJsonType(field.getType())) {
-                    IO.print("\nEntityConversion.java >  entityToRow() > Map or JSON field");
                     if (value == null) {
                         spec = spec.bindNull(column, Json.class);
                     } else {
@@ -77,16 +74,13 @@ public class EntityConversion {
                     }
                 }
                 else if (field.getType().isEnum()) {
-                    IO.print("\nEntityConversion.java >  entityToRow() > Enum field");
                     if (value == null) {
                         spec = spec.bindNull(column, String.class);
                     } else {
                         spec = spec.bind(column, ((Enum<?>) value).name());
                     }
                 }
-                
                 else {
-                    IO.print("\nEntityConversion.java >  entityToRow() > Other field");
                     if (value == null) {
                         spec = spec.bindNull(column, field.getType());
                     } else {
