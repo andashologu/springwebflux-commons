@@ -1,9 +1,6 @@
 package com.trademarketx.springwebflux.commons.conversion;
-
 import java.lang.reflect.Field;
-
 public class EnumConversion {
-
     /**
      * Converts a string to an Enum constant dynamically without casting.
      *
@@ -14,19 +11,16 @@ public class EnumConversion {
      */
     public static Enum<?> toEnum(Class<?> type, String value) {
         if (!type.isEnum()) throw new IllegalArgumentException("Provided type is not an Enum: " + type.getName());
-     
         for (Object constant : type.getEnumConstants()) {
             Enum<?> enumConstant = (Enum<?>) constant;
             if (enumConstant.name().equalsIgnoreCase(value)) {
                 return enumConstant;
             }
         }
-
         throw new IllegalArgumentException(
                 "No enum constant " + type.getName() + "." + value.toUpperCase()
         );
     }
-
     /**
      * Converts a string to an Enum constant using a Field object.
      *
